@@ -1,6 +1,7 @@
 import pandas as pd
-import requests
+from serpapi import GoogleSearch
 from fuzzywuzzy import process
+import os
 
 def clean_data(file_path):
     """Cleans and standardizes the input CSV file."""
@@ -13,30 +14,47 @@ def clean_data(file_path):
         return None
 
 def fetch_external_data(product_name):
-    """Fetch pricing data for a given product from an external API."""
+    """Fetch competitor pricing data from Google Shopping using SerpAPI."""
     try:
-        # Query a mock public product API
-        response = requests.get("https://fakestoreapi.com/products")
-        if response.status_code != 200:
-            print(f"Error fetching data: {response.status_code}")
+        # Retrieve SerpAPI key from environment variables
+        api_key = os.getenv("SERPAPI_KEY")
+        if not api_key:
+            print("Error: SERPAPI_KEY not found in .env file.")
             return None
-        
-        external_products = response.json()
-        
-        # Use fuzzy matching to find the best match
-        best_match = process.extractOne(
-            product_name, 
-            [product["title"] for product in external_products]
-        )
-        if best_match and best_match[1] > 80:  # Confidence threshold
-            matched_product = next(
-                item for item in external_products if item["title"] == best_match[0]
-            )
-            return {"name": matched_product["title"], "price": matched_product["price"]}
-        
-        return None
+
+        # Define search parameters
+        params = {
+            "engine": "google_shopping",  # Use Google Shopping engine
+            "q": product_name,           # Query string (product name)
+            "hl": "en",                  # Language
+            "gl": "us",                  # Country
+            "api_key": api_key           # SerpAPI key
+        }
+
+        # Perform search
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        shopping_results = results.get("shopping_results", [])
+
+        # Check if any shopping results were found
+        if not shopping_results:
+            print(f"No shopping results found for {product_name}.")
+            return None
+
+        # Extract the first relevant result
+        first_result = shopping_results[0]
+        extracted_price = first_result.get("extracted_price")  # Direct float price
+        if extracted_price is not None:
+            return {
+                "name": first_result["title"],
+                "price": extracted_price
+            }
+        else:
+            print(f"No extracted price found for {product_name}.")
+            return None
+
     except Exception as e:
-        print(f"Error during API fetch: {e}")
+        print(f"Error during SerpAPI fetch: {e}")
         return None
 
 def compare_prices(internal_data):
@@ -45,7 +63,7 @@ def compare_prices(internal_data):
     for _, row in internal_data.iterrows():
         product_name = row["product_name"]
         our_price = row["our_price"]
-        
+
         # Fetch external price
         external_data = fetch_external_data(product_name)
         if external_data:
@@ -66,5 +84,5 @@ def compare_prices(internal_data):
                 "price_difference": None,
                 "recommendation": "No data available"
             })
-    
+
     return pd.DataFrame(results)

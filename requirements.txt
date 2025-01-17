@@ -2,3 +2,4 @@ pandas
 requests
 fuzzywuzzy
 python-dotenv
+serpapi
