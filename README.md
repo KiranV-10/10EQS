@@ -48,12 +48,12 @@ python analysis.py ../data/products.csv
 ```
 
 ### Step 5: Results.md
-You can find the results.md in the src folder.
+You can find the [results.md](/src/results.md) in the src folder.
 - The results of this program are stored in a tabular format in results.md file after it successfully runs.
 - This is a real-time comparision of the store price to the actual market price. If a product is not found an exact match or even a closer match then it is deemed as "No data available"
 
 ### Step 6: Report.md
-You can find the report.md in the src folder.
+You can find the [report.md](/src/report.md) in the src folder.
 - This is a brief report of our tool and how does this work and what the results suggest. It is a prototype model and not a full-fledged application since we need more market insights and robust webscrapers to find the exact match for the product in our store. This is also something I want to build on-top of this dedicatedly if I am given a chance.
 
 
