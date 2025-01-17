@@ -2,6 +2,11 @@ import os
 import pandas as pd
 from utils import clean_data, compare_prices
 
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
+# Main Execution
 def main(input_file):
     # Step 1: Clean the data
     internal_data = clean_data(input_file)
@@ -12,7 +17,7 @@ def main(input_file):
     insights = compare_prices(internal_data)
 
     # Step 3: Save report
-    report_path = "report.md"
+    report_path = "results.md"
     with open(report_path, "w") as report:
         report.write("# Price Comparison Insights\n")
         report.write(insights.to_markdown(index=False))

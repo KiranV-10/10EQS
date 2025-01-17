@@ -34,24 +34,31 @@ def fetch_external_data(product_name):
         # Perform search
         search = GoogleSearch(params)
         results = search.get_dict()
+
+        # Try categorized_shopping_results first
+        categorized_results = results.get("categorized_shopping_results", [])
+        if categorized_results:
+            first_result = categorized_results[0]["shopping_results"][0]
+            extracted_price = first_result.get("extracted_price")
+            if extracted_price is not None:
+                return {"price": extracted_price}
+
+        # Fallback to shopping_results if categorized results are not present
         shopping_results = results.get("shopping_results", [])
+        if shopping_results:
+            # Use fuzzy matching to find the best match
+            product_titles = [item["title"] for item in shopping_results]
+            best_match, score = process.extractOne(product_name, product_titles)
+            if score >= 90:  # Match threshold
+                for item in shopping_results:
+                    if item["title"] == best_match:
+                        extracted_price = item.get("extracted_price")
+                        if extracted_price is not None:
+                            return {"price": extracted_price}
 
-        # Check if any shopping results were found
-        if not shopping_results:
-            print(f"No shopping results found for {product_name}.")
-            return None
-
-        # Extract the first relevant result
-        first_result = shopping_results[0]
-        extracted_price = first_result.get("extracted_price")  # Direct float price
-        if extracted_price is not None:
-            return {
-                "name": first_result["title"],
-                "price": extracted_price
-            }
-        else:
-            print(f"No extracted price found for {product_name}.")
-            return None
+        # Log when no match is found
+        print(f"Exact match not found for {product_name}.")
+        return None
 
     except Exception as e:
         print(f"Error during SerpAPI fetch: {e}")
