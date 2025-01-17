@@ -3,3 +3,5 @@ requests
 fuzzywuzzy
 python-dotenv
 serpapi
+google-search-results
+python-Levenshtein
